@@ -39,9 +39,17 @@ for i in range(num_classes):
                     name=f"class_{i}_once")
 
 # 2. No two classes can be scheduled in the same time slot on the same day
-for d in range(num_days):
-    for t in range(num_timeslots_per_day):
-        model.addConstr(gp.quicksum(x[i, d, t] for i in range(num_classes)) <= 1, name=f"time_{d}_{t}_non_overlap")
+# for d in range(num_days):
+#     for t in range(num_timeslots_per_day):
+#         model.addConstr(gp.quicksum(x[i, d, t] for i in range(num_classes)) <= 1, name=f"time_{d}_{t}_non_overlap")
+
+# Course Conflict Group Implementation
+conflict_group = [(0,1), (2,4)]
+
+for course1, course2 in conflict_group:
+    for d in range(num_days):
+        for t in range(num_timeslots_per_day):
+            model.addConstr(x[course1, d, t] + x[course2, d, t] <= 1, name=f"no_overlap_{course1}_{course2}_day{d}_time{t}")
 
 # Optimize the model
 model.optimize()
