@@ -2,6 +2,9 @@ import gurobipy as gp
 from gurobipy import GRB
 import pandas as pd
 
+# # TODO
+# - Make it so that only one course is moved at a time rather than both in the same conflict group
+
 # Load courses from Excel file
 file_path = "CourseOptimizerExcel.xlsx"
 
