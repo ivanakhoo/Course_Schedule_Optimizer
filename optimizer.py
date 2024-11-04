@@ -4,6 +4,7 @@ import pandas as pd
 
 # # TODO
 # - Make it so that only one course is moved at a time rather than both in the same conflict group
+# - Make it so that a certain course can only be put in certain slots
 
 # Load courses from Excel file
 file_path = "CourseOptimizerExcel.xlsx"
