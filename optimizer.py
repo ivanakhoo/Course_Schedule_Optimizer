@@ -3,8 +3,8 @@ from gurobipy import GRB
 import pandas as pd
 
 # # TODO
-# - Make it so that only one course is moved at a time rather than both in the same conflict group
 # - Make it so that a certain course can only be put in certain slots
+# - Incorporate preferences if possible for which course to move
 
 # Load courses from Excel file
 file_path = "CourseOptimizerExcel.xlsx"
@@ -44,7 +44,7 @@ time_slots = [
     "TH 9:30 AM - 10:45 AM",  # TH
     "TH 12:30 PM - 1:45 PM",  # TH
 ]
-# Initialize the score matrix with zero
+# Initialize the score matrix with 1
 score_matrix = [[1 for _ in range(len(time_slots))] for _ in range(len(course_schedule))]
 
 chairs_schedule = []
@@ -61,10 +61,9 @@ for class_idx, time_slot_idx in chairs_schedule:
     if class_idx < len(score_matrix) and time_slot_idx < len(time_slots):  # Ensure indices are valid
         score_matrix[class_idx][time_slot_idx] = 10
 
-# Compute total score to ensure it's exactly 120
+# Compute total score
 total_score = sum(sum(row) for row in score_matrix)
 print(f"Total Score: {total_score}")  # This will show the total score
-
 
 # Create a new model
 model = gp.Model("Class Scheduling")
@@ -83,13 +82,17 @@ for c in range(len(course_schedule)):
     model.addConstr(gp.quicksum(x[c, t] for t in range(len(time_slots))) == 1,
                     name=f"class_{c}_once")
 
-# Course Conflict Group Implementation
-conflict_group = [(0, 6), (2, 4)]
+# Conflict Group Implementation
+conflict_group = [
+    (0, 6),  
+    (2, 4)   
+]
 
+# Define time slot constraints to handle conflicts
 for course1, course2 in conflict_group:
     for t in range(len(time_slots)):
-        model.addConstr(x[course1, t] + x[course2, t] <= 1,
-                        name=f"no_overlap_{course1}_{course2}_time{t}")
+            model.addConstr(x[course1, t] + x[course2, t] <= 1,
+                            name=f"course_conflict_between_{course1}_{course2}_time{t}")
 
 # Optimize the model
 model.optimize()
