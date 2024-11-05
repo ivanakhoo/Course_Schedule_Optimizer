@@ -4,6 +4,8 @@ import pandas as pd
 
 # # TODO
 # - Make it so that a certain course can only be put in certain slots
+# - some courses are created to really only work in the context of MWF
+# - MAT 105 - TH structure of the course - hands-on and long. 50 min is not enough
 # - Incorporate preferences if possible for which course to move
 
 # Load courses from Excel file
