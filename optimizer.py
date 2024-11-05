@@ -87,7 +87,8 @@ for c in range(len(course_schedule)):
 # Conflict Group Implementation
 conflict_group = [
     (0, 6),  
-    (2, 4)   
+    (2, 4),
+    (6, 7)
 ]
 
 # Define time slot constraints to handle conflicts
@@ -95,6 +96,13 @@ for course1, course2 in conflict_group:
     for t in range(len(time_slots)):
             model.addConstr(x[course1, t] + x[course2, t] <= 1,
                             name=f"course_conflict_between_{course1}_{course2}_time{t}")
+
+# Allowed time slots constraint
+allowed_time_slots_for_course_6 = [0,2,4]
+
+for t in range(len(time_slots)):
+    if t not in allowed_time_slots_for_course_6:
+        model.addConstr(x[6,t] == 0, name=f"course_6_excluded_slot_{t}")
 
 # Optimize the model
 model.optimize()
