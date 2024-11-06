@@ -2,18 +2,13 @@ import gurobipy as gp
 from gurobipy import GRB
 import pandas as pd
 
-# # TODO
-# - Make it so that a certain course can only be put in certain slots
-# - some courses are created to really only work in the context of MWF
-# - MAT 105 - TH structure of the course - hands-on and long. 50 min is not enough
-# - Incorporate preferences if possible for which course to move
-
 # Load courses from Excel file
 file_path = "CourseOptimizerExcel.xlsx"
 
 # Load specific columns (Courses, Days, BegTime) from the Excel file
 data = pd.read_excel(file_path, usecols=["Courses", "Days", "BegTime"])
 
+# Dictionary with courses as keys, with each course having a dictionary filled with days, beginning times, and time index
 course_schedule = {
     row['Courses']: {
         'day': row['Days'],
@@ -40,12 +35,13 @@ for course, details in course_schedule.items():
 
 # Define time slots for specific days
 time_slots = [
-    "MWF 9:00 AM - 9:50 AM",  # MWF
-    "MWF 10:00 AM - 10:50 AM", # MWF
-    "MWF 11:00 AM - 11:50 AM", # MWF
-    "TH 9:30 AM - 10:45 AM",  # TH
-    "TH 12:30 PM - 1:45 PM",  # TH
+    "MWF 9:00 AM - 9:50 AM",  # Time Index 0
+    "MWF 10:00 AM - 10:50 AM", # Time Index 1
+    "MWF 11:00 AM - 11:50 AM", # Time Index 2
+    "TH 9:30 AM - 10:45 AM",  # Time Index 3
+    "TH 12:30 PM - 1:45 PM",  # Time Index 4
 ]
+
 # Initialize the score matrix with 1
 score_matrix = [[1 for _ in range(len(time_slots))] for _ in range(len(course_schedule))]
 
@@ -63,10 +59,6 @@ for class_idx, time_slot_idx in chairs_schedule:
     if class_idx < len(score_matrix) and time_slot_idx < len(time_slots):  # Ensure indices are valid
         score_matrix[class_idx][time_slot_idx] = 10
 
-# Compute total score
-total_score = sum(sum(row) for row in score_matrix)
-print(f"Total Score: {total_score}")  # This will show the total score
-
 # Create a new model
 model = gp.Model("Class Scheduling")
 
@@ -79,7 +71,7 @@ model.setObjective(gp.quicksum(score_matrix[c][t] * x[c, t]
                                  for t in range(len(time_slots))), GRB.MAXIMIZE)
 
 # Constraints:
-# 1. Each course must be scheduled in exactly one time slot
+# Each course must be scheduled in exactly one time slot
 for c in range(len(course_schedule)):
     model.addConstr(gp.quicksum(x[c, t] for t in range(len(time_slots))) == 1,
                     name=f"class_{c}_once")
@@ -91,15 +83,16 @@ conflict_group = [
     (6, 7)
 ]
 
-# Define time slot constraints to handle conflicts
+# Courses in the same conflict group may not be scheduled in the same time slot
 for course1, course2 in conflict_group:
     for t in range(len(time_slots)):
             model.addConstr(x[course1, t] + x[course2, t] <= 1,
                             name=f"course_conflict_between_{course1}_{course2}_time{t}")
 
-# Allowed time slots constraint
+# Time slots that Course 6 is allowed to move to
 allowed_time_slots_for_course_6 = [0,2,4]
 
+# Course 6 may only move into one of the time slots included in allowed_time_slots_for_course_6
 for t in range(len(time_slots)):
     if t not in allowed_time_slots_for_course_6:
         model.addConstr(x[6,t] == 0, name=f"course_6_excluded_slot_{t}")
@@ -112,7 +105,7 @@ if model.status == GRB.OPTIMAL:
     print("\nOptimal schedule:")
     for c in range(len(course_schedule)):
         for t in range(len(time_slots)):
-            if x[c, t].x > 0.5:  # If variable is selected
+            if x[c, t].x > 0.5:  
                 course_name = list(course_schedule.keys())[c]
                 print(f"{course_name} is scheduled in timeslot {time_slots[t]}")
     print("\nMaximum Score:", model.objVal)
