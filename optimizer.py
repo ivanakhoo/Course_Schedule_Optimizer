@@ -33,6 +33,13 @@ for course, details in course_schedule.items():
     if day in time_slot_map and beg_time in time_slot_map[day]:
         details['time_index'].append(time_slot_map[day][beg_time])
 
+# Print the original schedule before optimization
+print("Original Schedule:")
+for course, details in course_schedule.items():
+    print(f"{course} is scheduled in timeslot {details['day']} {details['beg_time']}")
+
+print()
+
 # Define time slots for specific days
 time_slots = [
     "MWF 9:00 AM - 9:50 AM",  # Time Index 0
@@ -80,7 +87,9 @@ for c in range(len(course_schedule)):
 conflict_group = [
     (0, 6),  
     (2, 4),
-    (6, 7)
+    (6, 7),
+    (1, 2),
+    (8, 12)
 ]
 
 # Courses in the same conflict group may not be scheduled in the same time slot
